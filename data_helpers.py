@@ -2,6 +2,26 @@ import numpy as np
 import re
 import itertools
 from collections import Counter
+from sklearn.utils import shuffle
+import jieba
+import pandas as pd
+from gensim.models import KeyedVectors, Word2Vec
+from keras.preprocessing import sequence
+
+def stopwordslist():
+    stopwords = [line.strip() for line in open('./data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
+    return stopwords
+
+
+def movestopwords(sentence):
+    stopwords = stopwordslist()
+    outstr = ''
+    for word in sentence:
+        if word not in stopwords:
+            if word != '\t' and '\n':
+                outstr += word
+                # outstr += " "
+    return outstr
 
 
 def clean_str(string):
@@ -31,19 +51,38 @@ def load_data_and_labels():
     Returns split sentences and labels.
     """
     # Load data from files
-    positive_examples = list(open("./data/rt-polarity.pos", "r", encoding='latin-1').readlines())
-    positive_examples = [s.strip() for s in positive_examples]
-    negative_examples = list(open("./data/rt-polarity.neg", "r", encoding='latin-1').readlines())
-    negative_examples = [s.strip() for s in negative_examples]
-    # Split by words
-    x_text = positive_examples + negative_examples
-    x_text = [clean_str(sent) for sent in x_text]
-    x_text = [s.split(" ") for s in x_text]
-    # Generate labels
-    positive_labels = [[0, 1] for _ in positive_examples]
-    negative_labels = [[1, 0] for _ in negative_examples]
-    y = np.concatenate([positive_labels, negative_labels], 0)
-    return [x_text, y]
+    # positive_examples = list(open("./data/rt-polarity.pos", "r", encoding='latin-1').readlines())
+    # positive_examples = [s.strip() for s in positive_examples]
+    # negative_examples = list(open("./data/rt-polarity.neg", "r", encoding='latin-1').readlines())
+    # negative_examples = [s.strip() for s in negative_examples]
+    # # Split by words
+    # x_text = positive_examples + negative_examples
+    # x_text = [clean_str(sent) for sent in x_text]
+    # x_text = [s.split(" ") for s in x_text]
+    # # Generate labels
+    # positive_labels = [[0, 1] for _ in positive_examples]
+    # negative_labels = [[1, 0] for _ in negative_examples]
+    # y = np.concatenate([positive_labels, negative_labels], 0)
+    df = pd.read_csv('./data/spamContent.csv')
+    df2 = pd.read_csv('./data/senti_100k3.csv')
+    df = df.append(df2)
+    df = shuffle(df)
+    review_part = df.review
+    sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
+    for item in sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_label = df.label
+    y = []
+    for i in y_label:
+        if i == '0' or i == 0.0:
+            y.append([1, 0])
+        else:
+            y.append([0, 1])
+    return [sentence, np.array(y)]
 
 
 def pad_sentences(sentences, padding_word="<PAD/>"):
@@ -85,6 +124,21 @@ def build_input_data(sentences, labels, vocabulary):
     return [x, y]
 
 
+def tokenizer(texts, word_index):
+    data = []
+    for sentence in texts:
+        new_txt = []
+        for word in sentence:
+            try:
+                new_txt.append(word_index[word])  # 把句子中的 词语转化为index
+            except:
+                new_txt.append(0)
+        data.append(new_txt)
+
+    texts = sequence.pad_sequences(data, maxlen=92)  # 使用kears的内置函数padding对齐句子,好处是输出numpy数组，不用自己转化了
+    return texts
+
+
 def load_data():
     """
     Loads and preprocessed data for the dataset.
@@ -92,7 +146,23 @@ def load_data():
     """
     # Load and preprocess data
     sentences, labels = load_data_and_labels()
-    sentences_padded = pad_sentences(sentences)
-    vocabulary, vocabulary_inv = build_vocab(sentences_padded)
-    x, y = build_input_data(sentences_padded, labels, vocabulary)
-    return [x, y, vocabulary, vocabulary_inv]
+
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data.bin', binary=True)
+    vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
+    word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
+    word_vector = {}  # 初始化`[word : vector]`字典
+    # 初始化存储所有向量的大矩阵，留意其中多一位（首行），词向量全为 0，用于 padding补零。
+    # 行数 为 所有单词数+1 比如 10000+1 ； 列数为 词向量“维度”比如100。
+    embeddings_matrix = np.zeros((len(vocab_list) + 1, Word2VecModel.vector_size))
+    ## 填充 上述 的字典 和 大矩阵
+    for i in range(len(vocab_list)):
+        word = vocab_list[i]  # 每个词语
+        word_index[word] = i + 1  # 词语：序号
+        word_vector[word] = Word2VecModel.wv[word]  # 词语：词向量
+        embeddings_matrix[i + 1] = Word2VecModel.wv[word]
+
+    sentences_padded = tokenizer(sentences, word_index)
+
+    # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
+    # x, y = build_input_data(sentences_padded, labels, vocabulary)
+    return [sentences_padded, labels, embeddings_matrix]

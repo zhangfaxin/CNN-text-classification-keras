@@ -5,9 +5,9 @@ from keras.optimizers import Adam
 from keras.models import Model
 from sklearn.model_selection import train_test_split
 from data_helpers import load_data
-
+from keras.callbacks import EarlyStopping,TensorBoard
 print('Loading data')
-x, y, vocabulary, vocabulary_inv = load_data()
+x, y, embeddings_matrix= load_data()
 
 # x.shape -> (10662, 56)
 # y.shape -> (10662, 2)
@@ -23,19 +23,19 @@ X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.2, random
 
 
 sequence_length = x.shape[1] # 56
-vocabulary_size = len(vocabulary_inv) # 18765
-embedding_dim = 256
+# vocabulary_size = len(vocabulary_inv) # 18765
+embedding_dim = 128
 filter_sizes = [3,4,5]
-num_filters = 512
+num_filters = 128
 drop = 0.5
 
-epochs = 100
-batch_size = 30
+epochs = 5
+batch_size = 64
 
 # this returns a tensor
 print("Creating Model...")
 inputs = Input(shape=(sequence_length,), dtype='int32')
-embedding = Embedding(input_dim=vocabulary_size, output_dim=embedding_dim, input_length=sequence_length)(inputs)
+embedding = Embedding(input_dim=len(embeddings_matrix), output_dim=embedding_dim,weights=[embeddings_matrix],input_length=sequence_length,trainable=False)(inputs)
 reshape = Reshape((sequence_length,embedding_dim,1))(embedding)
 
 conv_0 = Conv2D(num_filters, kernel_size=(filter_sizes[0], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu')(reshape)
@@ -55,11 +55,14 @@ output = Dense(units=2, activation='softmax')(dropout)
 model = Model(inputs=inputs, outputs=output)
 
 checkpoint = ModelCheckpoint('weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
-adam = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+adam = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
 model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
+# TensorBoard
+tbCallBack = TensorBoard(log_dir='./train_result/',update_freq='epoch')
+# EalryStopping
+early_stopping = EarlyStopping(monitor='val_loss', patience=2, verbose=2)
 print("Traning Model...")
-model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[checkpoint], validation_data=(X_test, y_test))  # starts training
-
-
+model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[checkpoint,tbCallBack, early_stopping], validation_data=(X_test, y_test) )  # starts training
+model.evaluate()
 
