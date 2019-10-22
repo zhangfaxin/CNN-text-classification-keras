@@ -14,7 +14,7 @@ x, y, embeddings_matrix, x_eval, y_eval = load_data()
 # len(vocabulary) -> 18765
 # len(vocabulary_inv) -> 18765
 
-X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=42)
 
 # X_train.shape -> (8529, 56)
 # y_train.shape -> (8529, 2)
@@ -29,7 +29,7 @@ filter_sizes = [3,4,5]
 num_filters = 128
 drop = 0.5
 
-epochs = 5
+epochs = 10
 batch_size = 128
 
 # this returns a tensor

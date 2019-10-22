@@ -3,7 +3,7 @@ from data_helpers import load_data
 from sklearn.metrics import confusion_matrix,classification_report
 
 if __name__ == '__main__':
-    model = keras.models.load_model('./weights.005-0.9400.hdf5')
+    model = keras.models.load_model('./weights.007-0.9505.hdf5')
     model.summary()
     x, y, embeddings_matrix, x_eval, y_eval = load_data()
     # loss_and_metric = model.evaluate(x_eval,y_eval,batch_size=64)

@@ -7,6 +7,8 @@ import jieba
 import pandas as pd
 from gensim.models import KeyedVectors, Word2Vec
 from keras.preprocessing import sequence
+from pypinyin import lazy_pinyin
+
 
 def stopwordslist():
     stopwords = [line.strip() for line in open('./data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
@@ -50,19 +52,6 @@ def load_data_and_labels():
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
-    # Load data from files
-    # positive_examples = list(open("./data/rt-polarity.pos", "r", encoding='latin-1').readlines())
-    # positive_examples = [s.strip() for s in positive_examples]
-    # negative_examples = list(open("./data/rt-polarity.neg", "r", encoding='latin-1').readlines())
-    # negative_examples = [s.strip() for s in negative_examples]
-    # # Split by words
-    # x_text = positive_examples + negative_examples
-    # x_text = [clean_str(sent) for sent in x_text]
-    # x_text = [s.split(" ") for s in x_text]
-    # # Generate labels
-    # positive_labels = [[0, 1] for _ in positive_examples]
-    # negative_labels = [[1, 0] for _ in negative_examples]
-    # y = np.concatenate([positive_labels, negative_labels], 0)
     df = pd.read_csv('./data/spamContent.csv')
     df2 = pd.read_csv('./data/senti_100k3.csv')
     df = df.append(df2)
@@ -85,6 +74,54 @@ def load_data_and_labels():
     x_test = pd.read_csv('./data/eval_dataset.csv')
     x_test_review = x_test.review
     x_test_sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
+    for item in x_test_sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_test_label = x_test.label
+    y_test = []
+    for i in y_test_label:
+        if i == '0' or i == 0.0:
+            y_test.append(0)
+        else:
+            y_test.append(1)
+    return [sentence, np.array(y),x_test_sentence,y_test]
+
+
+def word2pinyin(word):
+    pinyin = lazy_pinyin(word)
+    return "".join(pinyin)
+
+
+def load_pinyin_data_and_labels():
+    """
+    Loads polarity data from files, splits the data into words and generates labels.
+    Returns split sentences and labels.
+    """
+    df = pd.read_csv('./data/spamContent.csv')
+    df2 = pd.read_csv('./data/senti_100k3.csv')
+    df = df.append(df2)
+    df = shuffle(df)
+    review_part = df.review
+    sentence = [[word2pinyin(item) for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
+    for item in sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_label = df.label
+    y = []
+    for i in y_label:
+        if i == '0' or i == 0.0:
+            y.append([1, 0])
+        else:
+            y.append([0, 1])
+    x_test = pd.read_csv('./data/eval_dataset.csv')
+    x_test_review = x_test.review
+    x_test_sentence = [[word2pinyin(item) for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
     for item in x_test_sentence:
         while True:
             if ' ' in item:
@@ -164,6 +201,35 @@ def load_data():
     sentences, labels,x_test,y_test = load_data_and_labels()
 
     Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data.bin', binary=True)
+    vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
+    word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
+    word_vector = {}  # 初始化`[word : vector]`字典
+    # 初始化存储所有向量的大矩阵，留意其中多一位（首行），词向量全为 0，用于 padding补零。
+    # 行数 为 所有单词数+1 比如 10000+1 ； 列数为 词向量“维度”比如100。
+    embeddings_matrix = np.zeros((len(vocab_list) + 1, Word2VecModel.vector_size))
+    ## 填充 上述 的字典 和 大矩阵
+    for i in range(len(vocab_list)):
+        word = vocab_list[i]  # 每个词语
+        word_index[word] = i + 1  # 词语：序号
+        word_vector[word] = Word2VecModel.wv[word]  # 词语：词向量
+        embeddings_matrix[i + 1] = Word2VecModel.wv[word]
+
+    sentences_padded = tokenizer(sentences, word_index)
+    x_test = tokenizer(x_test,word_index)
+    # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
+    # x, y = build_input_data(sentences_padded, labels, vocabulary)
+    return [sentences_padded, labels, embeddings_matrix,x_test,y_test]
+
+
+def load_pinyin_data():
+    """
+    Loads and preprocessed data for the dataset.
+    Returns input vectors, labels, vocabulary, and inverse vocabulary.
+    """
+    # Load and preprocess data
+    sentences, labels,x_test,y_test = load_pinyin_data_and_labels()
+
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典
