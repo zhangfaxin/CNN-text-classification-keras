@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from data_helpers import load_data
 from keras.callbacks import EarlyStopping,TensorBoard
 print('Loading data')
-x, y, embeddings_matrix= load_data()
+x, y, embeddings_matrix, x_eval, y_eval = load_data()
 
 # x.shape -> (10662, 56)
 # y.shape -> (10662, 2)
@@ -30,7 +30,7 @@ num_filters = 128
 drop = 0.5
 
 epochs = 5
-batch_size = 64
+batch_size = 128
 
 # this returns a tensor
 print("Creating Model...")
@@ -64,5 +64,3 @@ tbCallBack = TensorBoard(log_dir='./train_result/',update_freq='epoch')
 early_stopping = EarlyStopping(monitor='val_loss', patience=2, verbose=2)
 print("Traning Model...")
 model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[checkpoint,tbCallBack, early_stopping], validation_data=(X_test, y_test) )  # starts training
-model.evaluate()
-

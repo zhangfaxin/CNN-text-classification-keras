@@ -82,7 +82,23 @@ def load_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    return [sentence, np.array(y)]
+    x_test = pd.read_csv('./data/eval_dataset.csv')
+    x_test_review = x_test.review
+    x_test_sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
+    for item in x_test_sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_test_label = x_test.label
+    y_test = []
+    for i in y_test_label:
+        if i == '0' or i == 0.0:
+            y_test.append(0)
+        else:
+            y_test.append(1)
+    return [sentence, np.array(y),x_test_sentence,y_test]
 
 
 def pad_sentences(sentences, padding_word="<PAD/>"):
@@ -145,7 +161,7 @@ def load_data():
     Returns input vectors, labels, vocabulary, and inverse vocabulary.
     """
     # Load and preprocess data
-    sentences, labels = load_data_and_labels()
+    sentences, labels,x_test,y_test = load_data_and_labels()
 
     Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
@@ -162,7 +178,7 @@ def load_data():
         embeddings_matrix[i + 1] = Word2VecModel.wv[word]
 
     sentences_padded = tokenizer(sentences, word_index)
-
+    x_test = tokenizer(x_test,word_index)
     # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
     # x, y = build_input_data(sentences_padded, labels, vocabulary)
-    return [sentences_padded, labels, embeddings_matrix]
+    return [sentences_padded, labels, embeddings_matrix,x_test,y_test]
