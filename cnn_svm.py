@@ -9,11 +9,13 @@ from keras.callbacks import EarlyStopping,TensorBoard
 import keras
 from sklearn.metrics import classification_report,confusion_matrix
 import numpy as np
+from sklearn.utils import shuffle
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn import svm
 print('Loading data')
 x, y, embeddings_matrix, x_eval, y_eval = load_data()
 x_pinyin, y_pinyin, embeddings_matrix, x_eval_pinyin, y_eval = load_pinyin_data()
+x,x_pinyin,y = shuffle(x,x_pinyin,y)
 # x.shape -> (10662, 56)
 # y.shape -> (10662, 2)
 # len(vocabulary) -> 18765
@@ -36,7 +38,6 @@ for i in y:
         y_true.append(0)
     else:
         y_true.append(1)
-
 
 lr.fit(total_x,y_true)
 # clf.fit(total_x,y_true)

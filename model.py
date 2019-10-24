@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from data_helpers import load_data
 from keras.callbacks import EarlyStopping,TensorBoard
 print('Loading data')
-x, y, embeddings_matrix, x_eval, y_eval = load_data()
+x, y, embeddings_matrix, x_eval, y_eval,x_eval_review = load_data()
 
 # x.shape -> (10662, 56)
 # y.shape -> (10662, 2)
@@ -29,7 +29,7 @@ filter_sizes = [3,4,5]
 num_filters = 128
 drop = 0.5
 
-epochs = 10
+epochs = 15
 batch_size = 128
 
 # this returns a tensor
@@ -54,12 +54,12 @@ output = Dense(units=2, activation='softmax')(dropout)
 # this creates a model that includes
 model = Model(inputs=inputs, outputs=output)
 
-checkpoint = ModelCheckpoint('weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
+checkpoint = ModelCheckpoint('./checkpoint/weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
 adam = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
 model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
 # TensorBoard
-tbCallBack = TensorBoard(log_dir='./train_result/',update_freq='epoch')
+tbCallBack = TensorBoard(log_dir='./train_result/',update_freq='batch')
 # EalryStopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=2, verbose=2)
 print("Traning Model...")
