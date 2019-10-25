@@ -99,7 +99,7 @@ def load_pinyin_data_and_labels():
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[word2pinyin(item) for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
+    sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -115,7 +115,7 @@ def load_pinyin_data_and_labels():
             y.append([0, 1])
     x_test = pd.read_csv('./data/test_data_1.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[word2pinyin(item) for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
+    x_test_sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in x_test_review]
     for item in x_test_sentence:
         while True:
             if ' ' in item:
@@ -227,7 +227,7 @@ def load_pinyin_data():
     sentences, labels,x_test,y_test = load_pinyin_data_and_labels()
     length = [len(x) for x in sentences]
     max_sentence = max(length)
-    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data_pinyin.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data_word_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典

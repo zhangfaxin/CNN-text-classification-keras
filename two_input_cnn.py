@@ -31,7 +31,8 @@ x_train_pinyin, X_test_pinyin = x_pinyin[:dev_sample_index], x_pinyin[dev_sample
 # y_test.shape -> (2133, 2)
 
 
-sequence_length = x.shape[1] # 56
+sequence_length = X_train.shape[1] # 56
+sequence_length_2 = x_train_pinyin.shape[1]
 # vocabulary_size = len(vocabulary_inv) # 18765
 embedding_dim = 128
 filter_sizes = [3,4,5]
@@ -49,10 +50,10 @@ embedding_layer = Embedding(input_dim=len(embeddings_matrix), output_dim=embeddi
 embedded_sequences = embedding_layer(inputs)
 reshape = Reshape((sequence_length,embedding_dim,1))(embedded_sequences)
 
-x_pinyin_inputs = Input(shape=(sequence_length,), dtype='int32',name='input_B')
-embedding_layer_2 = Embedding(input_dim=len(embeddings_matrix_2), output_dim=embedding_dim,weights=[embeddings_matrix_2],input_length=sequence_length,trainable=False,name='EB')
+x_pinyin_inputs = Input(shape=(sequence_length_2,), dtype='int32',name='input_B')
+embedding_layer_2 = Embedding(input_dim=len(embeddings_matrix_2), output_dim=embedding_dim,weights=[embeddings_matrix_2],input_length=sequence_length_2,trainable=False,name='EB')
 embedded_sequences_2 = embedding_layer_2(x_pinyin_inputs)
-reshape_pinyin = Reshape((sequence_length,embedding_dim,1))(embedded_sequences_2)
+reshape_pinyin = Reshape((sequence_length_2,embedding_dim,1))(embedded_sequences_2)
 
 conv_0 = Conv2D(num_filters, kernel_size=(filter_sizes[0], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu',name='A1')(reshape)
 conv_1 = Conv2D(num_filters, kernel_size=(filter_sizes[1], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu',name='A2')(reshape)
@@ -66,9 +67,9 @@ maxpool_0 = MaxPool2D(pool_size=(sequence_length - filter_sizes[0] + 1, 1), stri
 maxpool_1 = MaxPool2D(pool_size=(sequence_length - filter_sizes[1] + 1, 1), strides=(1,1), padding='valid')(conv_1)
 maxpool_2 = MaxPool2D(pool_size=(sequence_length - filter_sizes[2] + 1, 1), strides=(1,1), padding='valid')(conv_2)
 
-maxpool_0_pinyin = MaxPool2D(pool_size=(sequence_length - filter_sizes[0] + 1, 1), strides=(1,1), padding='valid')(conv_0_pinyin)
-maxpool_1_pinyin = MaxPool2D(pool_size=(sequence_length - filter_sizes[1] + 1, 1), strides=(1,1), padding='valid')(conv_1_pinyin)
-maxpool_2_pinyin = MaxPool2D(pool_size=(sequence_length - filter_sizes[2] + 1, 1), strides=(1,1), padding='valid')(conv_2_pinyin)
+maxpool_0_pinyin = MaxPool2D(pool_size=(sequence_length_2 - filter_sizes[0] + 1, 1), strides=(1,1), padding='valid')(conv_0_pinyin)
+maxpool_1_pinyin = MaxPool2D(pool_size=(sequence_length_2 - filter_sizes[1] + 1, 1), strides=(1,1), padding='valid')(conv_1_pinyin)
+maxpool_2_pinyin = MaxPool2D(pool_size=(sequence_length_2 - filter_sizes[2] + 1, 1), strides=(1,1), padding='valid')(conv_2_pinyin)
 
 concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1, maxpool_2])
 flatten = Flatten()(concatenated_tensor)
