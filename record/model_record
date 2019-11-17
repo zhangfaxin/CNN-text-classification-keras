@@ -1,0 +1,106 @@
+####
+分词  weibo_data.bin
+分词拼音 sentence_pinyin.bin
+字向量  word_sentence.bin
+字拼音向量 word_pinyin.bin
+######
+1.word_pinyin  cnn_word_pinyin_weights.009-0.9660.hdf5
+
+             precision    recall  f1-score   support
+
+          0       0.98      0.97      0.97     11472
+          1       0.93      0.95      0.94      5041
+
+avg / total       0.96      0.96      0.96     16513
+
+#########################################
+混淆矩阵：
+[[11124   348]
+ [  246  4795]]
+
+ 6. sentence_pinyin
+             precision    recall  f1-score   support
+
+          0       0.95      0.98      0.96     11472
+          1       0.94      0.89      0.92      5041
+
+avg / total       0.95      0.95      0.95     16513
+
+#########################################
+混淆矩阵：
+[[11189   283]
+ [  534  4507]]
+
+ 2.sentence cnn_sentence_weights.010-0.9652.hdf5
+
+             precision    recall  f1-score   support
+
+          0       0.94      0.97      0.96     11472
+          1       0.93      0.87      0.90      5041
+
+avg / total       0.94      0.94      0.94     16513
+
+#########################################
+混淆矩阵：
+[[11158   314]
+ [  654  4387]]
+
+ 3.sentence + word_pinyin  logistic
+[[11240   232]
+ [  255  4786]]
+             precision    recall  f1-score   support
+
+          0       0.98      0.98      0.98     11472
+          1       0.95      0.95      0.95      5041
+
+avg / total       0.97      0.97      0.97     16513
+
+4. word
+             precision    recall  f1-score   support
+
+          0       0.96      0.98      0.97     11472
+          1       0.96      0.90      0.93      5041
+
+avg / total       0.96      0.96      0.96     16513
+
+#########################################
+混淆矩阵：
+[[11288   184]
+ [  505  4536]]
+
+ 5. word + word_pinyin logistic
+[[11263   209]
+ [  247  4794]]
+             precision    recall  f1-score   support
+
+          0       0.98      0.98      0.98     11472
+          1       0.96      0.95      0.95      5041
+
+avg / total       0.97      0.97      0.97     16513
+
+
+6.word_pinyin   pianpang
+             precision    recall  f1-score   support
+
+          0      0.964     0.971     0.968     11465
+          1      0.934     0.917     0.925      5044
+
+avg / total      0.955     0.955     0.955     16509
+
+#########################################
+混淆矩阵：
+[[11137   328]
+ [  418  4626]]
+
+ 7.word + word_pinyin logistic pianpang
+ [[11262   203]
+ [  433  4611]]
+             precision    recall  f1-score   support
+
+          0      0.963     0.982     0.973     11465
+          1      0.958     0.914     0.935      5044
+
+avg / total      0.961     0.961     0.961     16509
+
+
+

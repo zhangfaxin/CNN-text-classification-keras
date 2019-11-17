@@ -29,8 +29,8 @@ filter_sizes = [3,4,5]
 num_filters = 128
 drop = 0.5
 
-epochs = 10
-batch_size = 64
+epochs = 15
+batch_size = 128
 
 # this returns a tensor
 print("Creating Model...")
@@ -54,7 +54,7 @@ output = Dense(units=2, activation='softmax')(dropout)
 # this creates a model that includes
 model = Model(inputs=inputs, outputs=output)
 
-checkpoint = ModelCheckpoint('./checkpoint/pinyin_sentence_weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
+checkpoint = ModelCheckpoint('./checkpoint/cnn_word_pinyin_weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
 adam = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
 model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])

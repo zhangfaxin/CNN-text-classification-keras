@@ -8,6 +8,7 @@ import pandas as pd
 from gensim.models import KeyedVectors, Word2Vec
 from keras.preprocessing import sequence
 from pypinyin import lazy_pinyin
+import part_of_speech
 
 
 def stopwordslist():
@@ -47,14 +48,16 @@ def clean_str(string):
     return string.strip().lower()
 
 
-def load_data_and_labels():
+def load_word_data_and_labels():
     """
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
+    sentence = [[item for item in list(movestopwords(s))] for s in review_part]
+    # sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in review_part]
+    # sentence = [part_of_speech.get_sentence(s) for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -68,9 +71,53 @@ def load_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('./data/test_data_1.csv')
+    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
+    x_test_review = x_test.review
+    x_test_sentence = [[item for item in list(movestopwords(s))] for s in x_test_review]
+    # x_test_sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in x_test_review]
+    # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
+    for item in x_test_sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_test_label = x_test.label
+    y_test = []
+    for i in y_test_label:
+        if i == '0' or i == 0.0:
+            y_test.append(0)
+        else:
+            y_test.append(1)
+    return [sentence, np.array(y),x_test_sentence,y_test,x_test_review]
+
+
+def load_data_and_labels():
+    """
+    Loads polarity data from files, splits the data into words and generates labels.
+    Returns split sentences and labels.
+    """
+    df = pd.read_csv('./data/train_data_1.csv')
+    review_part = df.review
+    sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
+    # sentence = [part_of_speech.get_sentence(s) for s in review_part]
+    for item in sentence:
+        while True:
+            if ' ' in item:
+                item.remove(' ')
+            else:
+                break
+    y_label = df.label
+    y = []
+    for i in y_label:
+        if i == '0' or i == 0.0:
+            y.append([1, 0])
+        else:
+            y.append([0, 1])
+    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
     x_test_sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
+    # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
     for item in x_test_sentence:
         while True:
             if ' ' in item:
@@ -113,7 +160,7 @@ def load_pinyin_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('./data/test_data_1.csv')
+    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
     x_test_sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in x_test_review]
     for item in x_test_sentence:
@@ -132,6 +179,46 @@ def load_pinyin_data_and_labels():
     return [sentence, np.array(y),x_test_sentence,y_test]
 
 
+def load_shengmu_data_and_labels():
+    """
+    Loads polarity data from files, splits the data into words and generates labels.
+    Returns split sentences and labels.
+    """
+    df = pd.read_csv('./data/train_data_1.csv')
+    review_part = df.review
+    ylabel = df.label
+    sentence = []
+    tone_list = []
+    y_label = []
+    for x,y in zip(review_part,ylabel):
+        shengmu,tone = part_of_speech.get_sentence(x)
+        if shengmu:
+            sentence.append(shengmu)
+            tone_list.append(tone)
+            if y == '0' or y == 0.0:
+                y_label.append([1,0])
+            else:
+                y_label.append([0,1])
+    x_test = pd.read_csv('./data/test_data_1.csv')
+    x_test_review = x_test.review
+    y_test = x_test.label
+    x_test_sentence = []
+    x_test_tone = []
+    y_test_label = []
+    for x,y in zip(x_test_review,y_test):
+        shengmu,tone = part_of_speech.get_sentence(x)
+        if shengmu:
+            x_test_sentence.append(shengmu)
+            x_test_tone.append(tone)
+            if y == '0' or y == 0.0:
+                y_test_label.append(0)
+            else:
+                y_test_label.append(1)
+
+    return [sentence, tone_list,np.array(y_label),x_test_sentence,x_test_tone,y_test_label,x_test_review]
+
+
+
 def pad_sentences(sentences, padding_word="<PAD/>"):
     """
     Pads all sentences to the same length. The length is defined by the longest sentence.
@@ -141,6 +228,7 @@ def pad_sentences(sentences, padding_word="<PAD/>"):
     padded_sentences = []
     for i in range(len(sentences)):
         sentence = sentences[i]
+        sentence = [str(i) for i in sentence]
         num_padding = sequence_length - len(sentence)
         new_sentence = sentence + [padding_word] * num_padding
         padded_sentences.append(new_sentence)
@@ -162,13 +250,12 @@ def build_vocab(sentences):
     return [vocabulary, vocabulary_inv]
 
 
-def build_input_data(sentences, labels, vocabulary):
+def build_input_data(sentences,vocabulary):
     """
     Maps sentences and labels to vectors based on a vocabulary.
     """
     x = np.array([[vocabulary[word] for word in sentence] for sentence in sentences])
-    y = np.array(labels)
-    return [x, y]
+    return x
 
 
 def tokenizer(texts, word_index,max_length):
@@ -218,6 +305,38 @@ def load_data():
     return [sentences_padded, labels, embeddings_matrix,x_test,y_test,sentence_raw]
 
 
+def load_word_data():
+    """
+    Loads and preprocessed data for the dataset.
+    Returns input vectors, labels, vocabulary, and inverse vocabulary.
+    """
+    # Load and preprocess data
+    sentences, labels,x_test,y_test,sentence_raw = load_word_data_and_labels()
+    length = [len(x) for x in sentences]
+    max_sentence = max(length)
+    print('index:{}'.format(length.index(max_sentence)))
+    print('max_sentence:{}'.format(max_sentence))
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_sentence.bin', binary=True)
+    vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
+    word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
+    word_vector = {}  # 初始化`[word : vector]`字典
+    # 初始化存储所有向量的大矩阵，留意其中多一位（首行），词向量全为 0，用于 padding补零。
+    # 行数 为 所有单词数+1 比如 10000+1 ； 列数为 词向量“维度”比如100。
+    embeddings_matrix = np.zeros((len(vocab_list) + 1, Word2VecModel.vector_size))
+    # 填充 上述 的字典 和 大矩阵
+    for i in range(len(vocab_list)):
+        word = vocab_list[i]  # 每个词语
+        word_index[word] = i + 1  # 词语：序号
+        word_vector[word] = Word2VecModel.wv[word]  # 词语：词向量
+        embeddings_matrix[i + 1] = Word2VecModel.wv[word]
+
+    sentences_padded = tokenizer(sentences, word_index,max_length=max_sentence)
+    x_test = tokenizer(x_test,word_index,max_length=max_sentence)
+    # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
+    # x, y = build_input_data(sentences_padded, labels, vocabulary)
+    return [sentences_padded, labels, embeddings_matrix,x_test,y_test,sentence_raw]
+
+
 def load_pinyin_data():
     """
     Loads and preprocessed data for the dataset.
@@ -227,7 +346,7 @@ def load_pinyin_data():
     sentences, labels,x_test,y_test = load_pinyin_data_and_labels()
     length = [len(x) for x in sentences]
     max_sentence = max(length)
-    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data_word_pinyin.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典
@@ -246,3 +365,38 @@ def load_pinyin_data():
     # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
     # x, y = build_input_data(sentences_padded, labels, vocabulary)
     return [sentences_padded, labels, embeddings_matrix,x_test,y_test]
+
+
+def load_shengmu_data():
+    """
+    Loads and preprocessed data for the dataset.
+    Returns input vectors, labels, vocabulary, and inverse vocabulary.
+    """
+    # Load and preprocess data
+    sentences,sentence_tone, labels,x_test,x_test_tone,y_test,sentence_raw = load_shengmu_data_and_labels()
+    length = [len(x) for x in sentences]
+    max_sentence = max(length)
+    print('max_sentence:{}'.format(max_sentence))
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data_shengmu_pinyin.bin', binary=True)
+    vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
+    word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
+    word_vector = {}  # 初始化`[word : vector]`字典
+    # 初始化存储所有向量的大矩阵，留意其中多一位（首行），词向量全为 0，用于 padding补零。
+    # 行数 为 所有单词数+1 比如 10000+1 ； 列数为 词向量“维度”比如100。
+    embeddings_matrix = np.zeros((len(vocab_list) + 1, Word2VecModel.vector_size))
+    # 填充 上述 的字典 和 大矩阵
+    for i in range(len(vocab_list)):
+        word = vocab_list[i]  # 每个词语
+        word_index[word] = i + 1  # 词语：序号
+        word_vector[word] = Word2VecModel.wv[word]  # 词语：词向量
+        embeddings_matrix[i + 1] = Word2VecModel.wv[word]
+
+    sentence_tone_padded = pad_sentences(sentence_tone)
+    vocabulary, vocabulary_inv = build_vocab(sentence_tone_padded)
+    sentence_tone = build_input_data(sentence_tone_padded,vocabulary)
+
+    sentences_padded = tokenizer(sentences, word_index,max_length=max_sentence)
+    x_test = tokenizer(x_test,word_index,max_length=max_sentence)
+    # vocabulary, vocabulary_inv = build_vocab(sentences_padded)
+    # x, y = build_input_data(sentences_padded, labels, vocabulary)
+    return [sentences_padded, sentence_tone,labels, embeddings_matrix,x_test,x_test_tone,y_test,sentence_raw,vocabulary, vocabulary_inv]
