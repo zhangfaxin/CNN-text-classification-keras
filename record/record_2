@@ -1,0 +1,62 @@
+1. cnn word  data-pianpang cnn_word_weights.010-0.9775.hdf5
+             precision    recall  f1-score   support
+
+          0      0.939     0.985     0.962     11459
+          1      0.961     0.856     0.905      5034
+
+avg / total      0.946     0.945     0.944     16493
+
+#########################################
+混淆矩阵：
+[[11286   173]
+ [  727  4307]]
+
+ 2.cnn word_pinyin data-pianpang  cnn_word_pinyin_weights.009-0.9660.hdf5
+             precision    recall  f1-score   support
+
+          0      0.956     0.972     0.964     11459
+          1      0.933     0.898     0.915      5034
+
+avg / total      0.949     0.949     0.949     16493
+
+#########################################
+混淆矩阵：
+[[11134   325]
+ [  514  4520]]
+
+ 3.cnn pianpang-pinyin   cnn_word_pinyin_pianpang_weights.011-0.9558.hdf5
+             precision    recall  f1-score   support
+
+          0      0.945     0.973     0.959     11459
+          1      0.935     0.870     0.902      5034
+
+avg / total      0.942     0.942     0.941     16493
+
+#########################################
+[[11154   305]
+ [  652  4382]]
+
+ 4. word word_pinyin  word_word_pinyin_weights.007-0.9800.hdf5
+             precision    recall  f1-score   support
+
+          0      0.956     0.982     0.969     11459
+          1      0.957     0.897     0.926      5034
+
+avg / total      0.956     0.956     0.956     16493
+
+#########################################
+混淆矩阵：
+[[11258   201]
+ [  521  4513]]
+
+
+5.投票机制
+/n3 47 50 word pinyin radical
+             precision    recall  f1-score   support
+
+          0      0.966     0.980     0.973     11459
+          1      0.953     0.921     0.937      5034
+
+avg / total      0.962     0.962     0.962     16493
+[[11231   228]
+ [  400  4634]]

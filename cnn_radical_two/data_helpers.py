@@ -8,11 +8,11 @@ import pandas as pd
 from gensim.models import KeyedVectors, Word2Vec
 from keras.preprocessing import sequence
 from pypinyin import lazy_pinyin
-import part_of_speech
+# import part_of_speech
 
 
 def stopwordslist():
-    stopwords = [line.strip() for line in open('./data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
+    stopwords = [line.strip() for line in open('../data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
     return stopwords
 
 
@@ -53,7 +53,7 @@ def load_word_data_and_labels():
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
-    df = pd.read_csv('./data/train_data_1.csv')
+    df = pd.read_csv('../data/train_data_1.csv')
     review_part = df.review
     sentence = [[item for item in list(movestopwords(s))] for s in review_part]
     # sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in review_part]
@@ -71,7 +71,7 @@ def load_word_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('../data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
     x_test_sentence = [[item for item in list(movestopwords(s))] for s in x_test_review]
     # x_test_sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in x_test_review]
@@ -144,7 +144,7 @@ def load_pinyin_data_and_labels():
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
-    df = pd.read_csv('./data/train_data_1.csv')
+    df = pd.read_csv('../data/train_data_1.csv')
     review_part = df.review
     sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in review_part]
     for item in sentence:
@@ -160,7 +160,7 @@ def load_pinyin_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('../data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
     x_test_sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in x_test_review]
     for item in x_test_sentence:
@@ -315,7 +315,7 @@ def load_word_data():
     max_sentence = max(length)
     print('index:{}'.format(length.index(max_sentence)))
     print('max_sentence:{}'.format(max_sentence))
-    Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_sentence.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('../data/word_sentence.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典
@@ -346,7 +346,7 @@ def load_pinyin_data():
     sentences, labels, x_test, y_test = load_pinyin_data_and_labels()
     length = [len(x) for x in sentences]
     max_sentence = max(length)
-    Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_pinyin.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('../data/word_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典
@@ -402,11 +402,3 @@ def load_shengmu_data():
     # x, y = build_input_data(sentences_padded, labels, vocabulary)
     return [sentences_padded, sentence_tone, labels, embeddings_matrix, x_test, x_test_tone, y_test, sentence_raw,
             vocabulary, vocabulary_inv]
-
-
-
-if __name__ == '__main__':
-
-     test = '沵是桫玭笃'
-     sentence = [word2pinyin(item) for item in list(movestopwords(test))]
-     print(sentence)

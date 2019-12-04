@@ -4,11 +4,11 @@ from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 from keras.models import Model
 from sklearn.model_selection import train_test_split
-from data_helpers import load_data,load_pinyin_data
+from data_helpers import load_data,load_pinyin_data,load_word_data
 from keras.callbacks import EarlyStopping,TensorBoard
 from sklearn.utils import shuffle
 print('Loading data')
-x, y, embeddings_matrix, x_eval, y_eval,x_eval_raw = load_data()
+x, y, embeddings_matrix, x_eval, y_eval,x_eval_raw = load_word_data()
 x_pinyin, y, embeddings_matrix_2, x_eval, y_eval = load_pinyin_data()
 x,x_pinyin,y = shuffle(x,x_pinyin,y)
 # x.shape -> (10662, 56)
@@ -20,10 +20,6 @@ X_train, X_test = x[:dev_sample_index], x[dev_sample_index:]
 y_train, y_test = y[:dev_sample_index], y[dev_sample_index:]
 
 x_train_pinyin, X_test_pinyin = x_pinyin[:dev_sample_index], x_pinyin[dev_sample_index:]
-# y_train_pinyin, y_test_pinyin = y[:dev_sample_index], y[dev_sample_index:]
-
-# X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=42)
-# x_train_pinyin, X_test_pinyin, y_train_pinyin, y_test_pinyin = train_test_split( x_pinyin, y, test_size=0.1, random_state=42)
 
 # X_train.shape -> (8529, 56)
 # y_train.shape -> (8529, 2)
@@ -83,12 +79,12 @@ output = Dense(units=2, activation='softmax')(dropout)
 # this creates a model that includes
 model = Model(inputs=[inputs,x_pinyin_inputs], outputs=output)
 
-checkpoint = ModelCheckpoint('./checkpoint/input_weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
+checkpoint = ModelCheckpoint('./two_input/word_word_pinyin_weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
 adam = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
 model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
 # TensorBoard
-tbCallBack = TensorBoard(log_dir='./train_result/',update_freq='batch')
+tbCallBack = TensorBoard(log_dir='./two_input/',update_freq='batch')
 # EalryStopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=2, verbose=2)
 print("Traning Model...")
