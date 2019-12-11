@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # model = keras.models.load_model('./checkpoint/cnn_sentence_weights.010-0.9652.hdf5')
     # model = keras.models.load_model('./checkpoint/cnn_word_pinyin_weights.009-0.9660.hdf5')
     # model = keras.models.load_model('./checkpoint/cnn_sentence_pinyin_weights.007-0.9593.hdf5')
-    model = keras.models.load_model('./checkpoint_pianpang/cnn_word_pinyin_pianpang_weights.009-0.9540.hdf5')
+    model = keras.models.load_model('./checkpoint_pianpang/cnn_new_method_word_pinyin_pianpang_weights.008-0.9517.hdf5')
     # model = keras.models.load_model('./checkpoint_pianpang/cnn_word_pinyin_pianpang_weights.009-0.9522.hdf5')
 
     model.summary()

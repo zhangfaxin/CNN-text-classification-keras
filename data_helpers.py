@@ -134,9 +134,78 @@ def load_data_and_labels():
     return [sentence, np.array(y), x_test_sentence, y_test, x_test_review]
 
 
+def load_only_bushou_from_file():
+    _dict = []
+    with open('./cnn_radical_two/only_bushou.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            _dict.append(line.strip('\n'))
+    return _dict
+
+
+def load_sensitive_from_file():
+    _dict = {}
+    # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
+    with open('./cnn_radical_two/dict_file.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            (key, value) = line.strip().split(',')
+            _dict[key] = value
+
+    return _dict
+
+
+only_bushou_list = load_only_bushou_from_file()
+sensitive = load_sensitive_from_file()
+
+
 def word2pinyin(word):
     pinyin = lazy_pinyin(word)
     return "".join(pinyin)
+
+
+def load_pianpang_from_file():
+    _dict = {}
+    # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
+    with open('./cnn_radical_two/pianpang.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            (key, value) = line.strip().split(',')
+            _dict[key] = value
+
+    return _dict
+
+
+dict_file = load_pianpang_from_file()
+
+
+def get_pianpang(word):
+    if word in dict_file:
+        return dict_file[word]
+    else:
+        return word
+
+
+def data_handle(sentence):
+    word_list = list(sentence)
+    new_list = []
+    new_list_pianpang = []
+    new_sentence = []
+    for i in word_list:
+        if i not in only_bushou_list:
+            new_list.append(i)
+            new_list_pianpang.append(get_pianpang(i))
+    sign_list = [0] * len(new_list)
+    sentence_new = ''.join(new_list_pianpang)
+    for d, x in sensitive.items():
+        if x in sentence_new:
+            index = sentence_new.find(x)
+            for i in range(index,index+len(list(x))):
+                sign_list[i] = 1
+            sentence_new = sentence_new.replace(x, d)
+    for i in range(len(new_list)):
+        if sign_list[i] == 0:
+            new_sentence.append(new_list[i])
+        else:
+            new_sentence.append(sentence_new[i])
+    return ''.join(new_sentence)
 
 
 def load_pinyin_data_and_labels():
@@ -146,7 +215,7 @@ def load_pinyin_data_and_labels():
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in review_part]
+    sentence = [[word2pinyin(item) for item in list(data_handle(movestopwords(s)))] for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -162,7 +231,7 @@ def load_pinyin_data_and_labels():
             y.append([0, 1])
     x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in x_test_review]
+    x_test_sentence = [[word2pinyin(item) for item in list(data_handle(movestopwords(s)))] for s in x_test_review]
     for item in x_test_sentence:
         while True:
             if ' ' in item:
@@ -312,7 +381,7 @@ def load_word_data():
     # Load and preprocess data
     sentences, labels, x_test, y_test, sentence_raw = load_word_data_and_labels()
     length = [len(x) for x in sentences]
-    max_sentence = max(length)
+    max_sentence = 491
     print('index:{}'.format(length.index(max_sentence)))
     print('max_sentence:{}'.format(max_sentence))
     Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_sentence.bin', binary=True)
@@ -345,7 +414,7 @@ def load_pinyin_data():
     # Load and preprocess data
     sentences, labels, x_test, y_test = load_pinyin_data_and_labels()
     length = [len(x) for x in sentences]
-    max_sentence = max(length)
+    max_sentence = 491
     Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
@@ -404,9 +473,7 @@ def load_shengmu_data():
             vocabulary, vocabulary_inv]
 
 
-
 if __name__ == '__main__':
-
-     test = '沵是桫玭笃'
-     sentence = [word2pinyin(item) for item in list(movestopwords(test))]
-     print(sentence)
+    test = '常于同好争高下，不与抄辶畐短长。'
+    sentence = [word2pinyin(item) for item in list(data_handle(movestopwords(test))) if word2pinyin(item)]
+    print(sentence)

@@ -29,7 +29,7 @@ x, x_pinyin, x_radical, y = shuffle(x, x_pinyin, x_radical, y)
 model = keras.models.load_model('./checkpoint/cnn_word_weights.010-0.9775.hdf5')
 model2 = keras.models.load_model('./checkpoint/cnn_word_pinyin_weights.009-0.9660.hdf5')
 model3 = keras.models.load_model(
-    './cnn_radical_two/checkpoint_pianpang/cnn_word_pinyin_pianpang_weights.011-0.9558.hdf5')
+    './cnn_radical_two/checkpoint_pianpang/cnn_new_method_word_pinyin_pianpang_weights.008-0.9517.hdf5')
 
 dense1_layer_model = Model(inputs=model.input, outputs=model.output)
 dense2_layer_model = Model(inputs=model2.input, outputs=model2.output)
@@ -93,18 +93,18 @@ for i in y:
 
 # pre = lr.predict(total_eval)
 y_pre = []
-pre_eval = x_eval * 0.03 + x_eval_pinyin * 0.47 + x_eval_radical * 0.5
+pre_eval = x_eval * 0.03 + x_eval_pinyin * 0.47 + x_eval_radical * 0.50
 for t in pre_eval:
     if t[0] > t[1]:
         y_pre.append(0)
     else:
         y_pre.append(1)
 report = classification_report(y_eval, np.array(y_pre), digits=3)
-
-# for i in range(1, 9, 1):
-#     for j in range(1, 10-i, 1):
-#         k = 10 - i - j
-#         pre_eval = x_eval * i + x_eval_pinyin * j + x_eval_radical * k
+#
+# for i in range(0, 100, 1):
+#     for j in range(0, 100-i, 1):
+#         k = 100 - i - j
+#         pre_eval = x_eval * i/100 + x_eval_pinyin * j/100 + x_eval_radical * k/100
 #         y_pre = []
 #         for t in pre_eval:
 #             if t[0] > t[1]:
@@ -113,13 +113,13 @@ report = classification_report(y_eval, np.array(y_pre), digits=3)
 #                 y_pre.append(1)
 #         report = classification_report(y_eval,np.array(y_pre),digits=3)
 #         file = open('./record/weight.txt','a')
-#         weight = i + ' '+j+' ' +k+ ' '
+#         weight = str(i) + ' '+str(j)+' ' +str(k)+ ' '
 #         file.write(weight)
 #         file.write(report)
 #         file.write('/n')
 #         file.close()
+
 evaluate = pd.DataFrame({'review': x_raw, 'trueL': y_eval, 'preL': np.array(y_pre)})
 evaluate.to_csv('./pianpang/weight_comb-pianpang.csv', header=True, index=False)
-# report = classification_report(y_eval, pre, digits=3)
 print(confusion_matrix(y_eval, np.array(y_pre)))
-# print(report)
+print(report)
