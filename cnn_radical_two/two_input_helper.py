@@ -137,7 +137,7 @@ def load_data_and_labels():
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[word2pinyin(item) for item in list(word_handle(movestopwords(s)))] for s in review_part]
+    sentence = [[get_word_pianpang(item) for item in list(movestopwords(s))] for s in review_part]
     # sentence = [part_of_speech.get_sentence(s) for s in review_part]
     for item in sentence:
         while True:
@@ -179,7 +179,7 @@ def load_eval_data_and_labels():
     """
     x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[word2pinyin(item) for item in word_handle(list(movestopwords(s)))] for s in x_test_review]
+    x_test_sentence = [[get_word_pianpang(item) for item in list(movestopwords(s))] for s in x_test_review]
     # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
     for item in x_test_sentence:
         while True:

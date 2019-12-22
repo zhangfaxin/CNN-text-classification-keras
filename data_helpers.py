@@ -215,7 +215,7 @@ def load_pinyin_data_and_labels():
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[word2pinyin(item) for item in list(data_handle(movestopwords(s)))] for s in review_part]
+    sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -231,7 +231,7 @@ def load_pinyin_data_and_labels():
             y.append([0, 1])
     x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[word2pinyin(item) for item in list(data_handle(movestopwords(s)))] for s in x_test_review]
+    x_test_sentence = [[word2pinyin(item) for item in list(movestopwords(s))] for s in x_test_review]
     for item in x_test_sentence:
         while True:
             if ' ' in item:
