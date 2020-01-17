@@ -5,6 +5,7 @@ from keras.optimizers import Adam
 from keras.models import Model
 from sklearn.model_selection import train_test_split
 from data_helpers import load_data, load_pinyin_data, load_word_data
+from radical.radical_data_helpers import load_data
 from keras.callbacks import EarlyStopping, TensorBoard
 import keras
 from sklearn.metrics import classification_report, confusion_matrix
@@ -16,6 +17,7 @@ from sklearn import svm
 from cnn_radical_two.two_input_helper import load_pianpang_data, load_pianpang_eval_data
 
 print('Loading data')
+x_label, y_label, x_eval_label, y_eval_label, sentence_raw_label, max_length = load_data()
 x, y, embeddings_matrix, x_eval, y_eval, x_raw = load_word_data()
 x_pinyin, y_pinyin, embeddings_matrix, x_eval_pinyin, y_eval = load_pinyin_data()
 x_radical, y, embeddings_matrix_2 = load_pianpang_data()
@@ -26,7 +28,8 @@ x, x_pinyin, x_radical, y = shuffle(x, x_pinyin, x_radical, y)
 # y.shape -> (10662, 2)
 # len(vocabulary) -> 18765
 # len(vocabulary_inv) -> 18765
-model = keras.models.load_model('./checkpoint/cnn_word_weights.010-0.9775.hdf5')
+model = keras.models.load_model('../radical/checkpoint/cnn_radical_weights.015-0.9034.hdf5')
+# model = keras.models.load_model('./checkpoint/cnn_word_weights.010-0.9775.hdf5')
 model2 = keras.models.load_model('./checkpoint/cnn_word_pinyin_weights.009-0.9660.hdf5')
 model3 = keras.models.load_model(
     './cnn_radical_two/checkpoint_pianpang/cnn_new_method_word_pinyin_pianpang_weights.008-0.9517.hdf5')

@@ -26,12 +26,12 @@ X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.1, random_
 
 sequence_length = max_length  # 56
 # vocabulary_size = len(vocabulary_inv) # 18765
-embedding_dim = 7
+embedding_dim = 11
 filter_sizes = [3, 4, 5]
 num_filters = 128
 drop = 0.5
 
-epochs = 15
+epochs = 50
 batch_size = 128
 
 # this returns a tensor
@@ -59,7 +59,7 @@ output = Dense(units=2, activation='softmax')(dropout)
 # this creates a model that includes
 model = Model(inputs=inputs, outputs=output)
 
-checkpoint = ModelCheckpoint('./checkpoint/cnn_radical_weights.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc',
+checkpoint = ModelCheckpoint('./checkpoint/cnn_radical_weights_3.{epoch:03d}-{val_acc:.4f}.hdf5', monitor='val_acc',
                              verbose=1, save_best_only=True, mode='auto')
 adam = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 

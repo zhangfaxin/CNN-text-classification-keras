@@ -21,7 +21,7 @@ fcm = FourCornerMethod()
 from soundshapecode.variant_kmp import VatiantKMP
 
 SIMILARITY_THRESHOLD = 0.35
-SSC_ENCODE_WAY = 'SHAPE'  # 'ALL','SOUND','SHAPE'
+SSC_ENCODE_WAY = 'ALL'  # 'ALL','SOUND','SHAPE'
 
 yunmuDict = {'a': '1', 'o': '2', 'e': '3', 'i': '4',
              'u': '5', 'v': '6', 'ai': '7', 'ei': '7',
@@ -199,6 +199,17 @@ def clean_str(string):
     return string.strip().lower()
 
 
+def load_only_bushou_from_file():
+    _dict = []
+    with open('../cnn_radical_two/only_bushou.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            _dict.append(line.strip('\n'))
+    return _dict
+
+
+only_bushou_list = load_only_bushou_from_file()
+
+
 def load_word_data_and_labels():
     """
     Loads polarity data from files, splits the data into words and generates labels.
@@ -255,7 +266,37 @@ def load_dict_from_file():
 
 def get_label(word):
     label = list(getSSC(word, SSC_ENCODE_WAY)[0])
-    return list(map(int, label))
+    label_int = []
+    for i in label:
+        if i <= 'Z' and i >= 'A':
+            label_int.append(ord(i))
+        else:
+            label_int.append(int(i))
+    wights = [0.4, 0.4, 0.1, 0.1, 0.25, 0.1, 0.1, 0.1, 0.1, 0.1, 0.25]
+    for i in range(10):
+        label_int[i] = label_int[i] * wights[i]
+    return label_int
+
+
+def load_pianpang_from_file():
+    _dict = {}
+    # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
+    with open('../cnn_radical_two/pianpang.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            (key, value) = line.strip().split(',')
+            _dict[key] = value
+
+    return _dict
+
+
+dict_file = load_pianpang_from_file()
+
+
+def get_radical(word):
+    if word in dict_file:
+        return dict_file[word]
+    else:
+        return word
 
 
 def load_data_and_labels():
@@ -265,7 +306,7 @@ def load_data_and_labels():
     """
     df = pd.read_csv('../data/train_data_1.csv')
     review_part = df.review
-    sentence = [[item for item in list(movestopwords(s))] for s in review_part]
+    sentence = [[item for item in list(movestopwords(s)) if item not in only_bushou_list] for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -279,9 +320,9 @@ def load_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('../data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('../data/test_data_1-pianpang_2.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[item for item in list(movestopwords(s))] for s in x_test_review]
+    x_test_sentence = [[item for item in list(movestopwords(s)) if item not in only_bushou_list] for s in x_test_review]
     # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
     for item in x_test_sentence:
         while True:
@@ -374,13 +415,14 @@ def label_encode_sentence(sentence):
     for i in sentence:
         word_small = []
         for word in i:
-            if word != ' ':
+            if word != ' ' :
                 encoded_word = get_label(word)
                 word_small.append(encoded_word)
             else:
                 encoded_word = get_label('一')
                 word_small.append(encoded_word)
-        result_sentence.append(np.array(word_small))
+        if word_small:
+            result_sentence.append(np.array(word_small))
     return result_sentence
 
 
@@ -429,13 +471,13 @@ def load_data():
     x_test = padding_sentences(x_test, padding_sentence_length=max_sentence, padding_token='一')
     sentences_to_encode = label_encode_sentence(sentences[0])
     x_test = label_encode_sentence(x_test[0])
-    print('index:{}'.format(length.index(max_sentence)))
-    print('max_sentence:{}'.format(max_sentence))
+    # print('index:{}'.format(length.index(max_sentence)))
+    # print('max_sentence:{}'.format(max_sentence))
     sentences_to_encode = np.array(sentences_to_encode)
     x_test = np.array(x_test)
     return [sentences_to_encode, labels, x_test, y_test, sentence_raw, max_sentence]
 
 
 if __name__ == '__main__':
-    get_one_hot_label('123')
-    print("1223")
+
+    print('123')

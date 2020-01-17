@@ -14,7 +14,7 @@ from pypinyin import pinyin, lazy_pinyin, Style
 def load_pianpang_from_file():
     _dict = {}
     # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
-    with open('./cnn_radical_two/pianpang.txt', 'r', encoding='utf-8') as dict_file:
+    with open('../cnn_radical_two/pianpang.txt', 'r', encoding='utf-8') as dict_file:
         for line in dict_file:
             (key, value) = line.strip().split(',')
             _dict[key] = value
@@ -25,7 +25,7 @@ def load_pianpang_from_file():
 def load_sensitive_from_file():
     _dict = {}
     # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
-    with open('./cnn_radical_two/dict_file.txt', 'r', encoding='utf-8') as dict_file:
+    with open('../cnn_radical_two/dict_file.txt', 'r', encoding='utf-8') as dict_file:
         for line in dict_file:
             (key, value) = line.strip().split(',')
             _dict[key] = value
@@ -45,7 +45,7 @@ def load_bushou_from_file():
 
 def load_only_bushou_from_file():
     _dict = []
-    with open('./cnn_radical_two/only_bushou.txt', 'r', encoding='utf-8') as dict_file:
+    with open('../cnn_radical_two/only_bushou.txt', 'r', encoding='utf-8') as dict_file:
         for line in dict_file:
             _dict.append(line.strip('\n'))
     return _dict
@@ -81,7 +81,7 @@ def get_word_bushou(word):
 
 
 def stopwordslist():
-    stopwords = [line.strip() for line in open('./data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
+    stopwords = [line.strip() for line in open('../data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
     return stopwords
 
 
@@ -177,7 +177,7 @@ def load_eval_data_and_labels():
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
-    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('../data/test_data_1-pianpang.csv')
     x_test_review = x_test.review
     x_test_sentence = [[get_word_pianpang(item) for item in list(movestopwords(s))] for s in x_test_review]
     # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
@@ -340,7 +340,7 @@ def load_pianpang_eval_data():
     max_sentence = 481
     # print('index:{}'.format(length.index(max_sentence)))
     # print('max_sentence:{}'.format(max_sentence))
-    Word2VecModel = KeyedVectors.load_word2vec_format('./data/word_pinyin.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('../data/word_pinyin.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典

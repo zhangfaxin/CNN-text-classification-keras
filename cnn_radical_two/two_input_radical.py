@@ -1,20 +1,19 @@
-from keras.layers import Input, Dense, Embedding, Conv2D, MaxPool2D,BatchNormalization
+from keras.layers import Input, Dense, Embedding, Conv2D, MaxPool2D, BatchNormalization
 from keras.layers import Reshape, Flatten, Dropout, Concatenate, Add, Lambda
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 from keras.models import Model
-from data_helpers import load_word_data, load_pinyin_data
+from data_helpers import load_word_data, load_pinyin_data, load_data
 import sys
+
 sys.path.append('..')
 from cnn_radical_two.two_input_helper import load_pianpang_data
 from keras.callbacks import EarlyStopping, TensorBoard
 from sklearn.utils import shuffle
-from cnn_radical_two.attention_layer import AttLayer
+from cnn_radical_two.attention_layer import Attention_layer
 import numpy as np
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-
-
 
 config = tf.ConfigProto()
 config.gpu_options.allocator_type = 'BFC'
@@ -24,12 +23,12 @@ set_session(tf.Session(config=config))
 
 print('Loading data')
 
-x, y, embeddings_matrix, x_eval, y_eval, x_eval_raw = load_word_data()
+x, y, embeddings_matrix, x_eval, y_eval, x_eval_raw = load_data()
 x_pinyin, y_pinyin, embeddings_matrix_3, x_eval_pinyin, y_eval_pinyin = load_pinyin_data()
 x_radical, y, embeddings_matrix_2 = load_pianpang_data()
 
 # x_pinyin = x_pinyin + x_radical
-x, x_pinyin, x_radical, y = shuffle(x, x_pinyin, x_radical, y)
+x, x_pinyin, x_radical, y = shuffle(x, x_pinyin, x_radical, y, random_state=0)
 
 dev_sample_index = -1 * int(0.1 * float(len(y)))
 X_train, X_test = x[:dev_sample_index], x[dev_sample_index:]
@@ -119,7 +118,7 @@ maxpool_2_pinyin = MaxPool2D(pool_size=(sequence_length_3 - filter_sizes[2] + 1,
     conv_2_pinyin)
 
 concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1, maxpool_2])
-# concatenated_tensor = BatchNormalization()(concatenated_tensor)
+
 flatten = Flatten()(concatenated_tensor)
 
 concatenated_tensor_radical = Concatenate(axis=1)([maxpool_0_radical, maxpool_1_radical, maxpool_2_radical])
@@ -141,12 +140,12 @@ flatten_pinyin = Flatten()(concatenated_tensor_pinyin)
 
 # flatten_radical = BatchNormalization()(flatten_radical)
 
+
 flatten_pinyin = Add()([flatten_radical, flatten_pinyin])
 # flatten_pinyin = BatchNormalization()(flatten_pinyin)
 # flatten = BatchNormalization()(flatten)
 # flatten_pinyin = BatchNormalization()(flatten_pinyin)
-# flatten_concat = Concatenate(axis=1)([flatten, flatten_pinyin])
-flatten_concat = Add()([flatten,flatten_pinyin])
+flatten_concat = Add()([flatten, flatten_pinyin])
 # flatten_concat = BatchNormalization()(flatten_concat)
 dropout = Dropout(drop)(flatten_concat)
 # dropout = AttLayer()(dropout)

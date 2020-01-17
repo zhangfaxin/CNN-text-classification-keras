@@ -11,6 +11,37 @@ from pypinyin import lazy_pinyin
 import part_of_speech
 
 
+def load_pianpang_from_file():
+    _dict = {}
+    # file = pd.read_csv('../review/pianpang.csv',encoding='utf-8')
+    with open('./cnn_radical_two/pianpang.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            (key, value) = line.strip().split(',')
+            _dict[key] = value
+
+    return _dict
+
+
+def load_only_bushou_from_file():
+    _dict = []
+    with open('./cnn_radical_two/only_bushou.txt', 'r', encoding='utf-8') as dict_file:
+        for line in dict_file:
+            _dict.append(line.strip('\n'))
+    return _dict
+
+
+dict_file = load_pianpang_from_file()
+
+only_bushou_list = load_only_bushou_from_file()
+
+
+def get_pianpang(word):
+    if word in dict_file:
+        return dict_file[word]
+    else:
+        return word
+
+
 def stopwordslist():
     stopwords = [line.strip() for line in open('./data/stop_ch.txt', 'r', encoding='utf-8').readlines()]
     return stopwords
@@ -55,7 +86,8 @@ def load_word_data_and_labels():
     """
     df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
-    sentence = [[item for item in list(movestopwords(s))] for s in review_part]
+    sentence = [[item for item in list(movestopwords(s))] for s in
+                review_part]
     # sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in review_part]
     # sentence = [part_of_speech.get_sentence(s) for s in review_part]
     for item in sentence:
@@ -71,9 +103,10 @@ def load_word_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('./data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('./data/test_data_1-pianpang_2.csv')
     x_test_review = x_test.review
-    x_test_sentence = [[item for item in list(movestopwords(s))] for s in x_test_review]
+    x_test_sentence = [[item for item in list(movestopwords(s))] for s in
+                       x_test_review]
     # x_test_sentence = [[word2pinyin(i) for i in jieba.cut(movestopwords(s),cut_all=False)] for s in x_test_review]
     # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
     for item in x_test_sentence:
@@ -97,10 +130,10 @@ def load_data_and_labels():
     Loads polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
-    df = pd.read_csv('../data/train_data_1.csv')
+    df = pd.read_csv('./data/train_data_1.csv')
     review_part = df.review
+    # sentence = [[get_pianpang(item) for item in list(movestopwords(s)) if item not in only_bushou_list] for s in review_part]
     sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in review_part]
-    # sentence = [part_of_speech.get_sentence(s) for s in review_part]
     for item in sentence:
         while True:
             if ' ' in item:
@@ -114,8 +147,9 @@ def load_data_and_labels():
             y.append([1, 0])
         else:
             y.append([0, 1])
-    x_test = pd.read_csv('../data/test_data_1-pianpang.csv')
+    x_test = pd.read_csv('./data/test_data_1-pianpang_2.csv')
     x_test_review = x_test.review
+    # x_test_sentence = [[get_pianpang(item) for item in list(movestopwords(s)) if item not in only_bushou_list] for s in x_test_review]
     x_test_sentence = [[item for item in jieba.cut(movestopwords(s), cut_all=False)] for s in x_test_review]
     # x_test_sentence = [part_of_speech.get_sentence(s) for s in x_test_review]
     for item in x_test_sentence:
@@ -197,7 +231,7 @@ def data_handle(sentence):
     for d, x in sensitive.items():
         if x in sentence_new:
             index = sentence_new.find(x)
-            for i in range(index,index+len(list(x))):
+            for i in range(index, index + len(list(x))):
                 sign_list[i] = 1
             sentence_new = sentence_new.replace(x, d)
     for i in range(len(new_list)):
@@ -352,7 +386,7 @@ def load_data():
     max_sentence = max(length)
     print('index:{}'.format(length.index(max_sentence)))
     print('max_sentence:{}'.format(max_sentence))
-    Word2VecModel = KeyedVectors.load_word2vec_format('../data/weibo_data.bin', binary=True)
+    Word2VecModel = KeyedVectors.load_word2vec_format('./data/weibo_data.bin', binary=True)
     vocab_list = [word for word, Vocab in Word2VecModel.wv.vocab.items()]
     word_index = {" ": 0}  # 初始化 `[word : token]` ，后期 tokenize 语料库就是用该词典。
     word_vector = {}  # 初始化`[word : vector]`字典
@@ -474,6 +508,4 @@ def load_shengmu_data():
 
 
 if __name__ == '__main__':
-    test = '常于同好争高下，不与抄辶畐短长。'
-    sentence = [word2pinyin(item) for item in list(data_handle(movestopwords(test))) if word2pinyin(item)]
-    print(sentence)
+    word2pinyin('号')

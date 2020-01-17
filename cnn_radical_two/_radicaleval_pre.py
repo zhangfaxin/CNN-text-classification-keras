@@ -4,7 +4,7 @@ sys.path.append('..')
 from cnn_radical_two.two_input_helper import load_pianpang_eval_data
 from sklearn.metrics import confusion_matrix,classification_report
 import pandas as pd
-from data_helpers import load_word_data,load_pinyin_data
+from data_helpers import load_word_data,load_pinyin_data,load_data
 import numpy as np
 
 
@@ -15,7 +15,7 @@ if __name__ == '__main__':
     model = keras.models.load_model('./joint_checkpoint/adjust_weights_0.3_0.3_0.3.010-0.9743.hdf5')
 
     model.summary()
-    x, y, embeddings_matrix, x_eval, y_eval,sentence_raw = load_word_data()
+    x, y, embeddings_matrix, x_eval, y_eval,sentence_raw = load_data()
     x, y, embeddings_matrix, x_eval_pinyin, y_eval = load_pinyin_data()
     # x, y, embeddings_matrix, x_eval, y_eval,sentence_raw = load_word_data()
     # loss_and_metric = model.evaluate(x_eval,y_e val,batch_size=64)
